@@ -1,0 +1,33 @@
+#!/bin/bash
+
+# Source and destination directories
+src_dir=~/.nix-profile/bin
+dest_dir=~/.local/bin/nix4bx
+
+# Create the destination directory if it doesn't exist
+mkdir -p $dest_dir
+
+# Iterate through each file in the source directory
+for file_path in $src_dir/*; do
+    # Extract the file name from the path
+    file_name=$(basename $file_path)
+
+    # Create the content for the new file
+    content="#!/bin/bash
+
+# Check if $src_dir/{file_name} exists
+if [ -x $src_dir/$file_name ]; then
+    # If it exists, launch it
+    $src_dir/$file_name \"\$@\"
+else
+    # If not, launch distrobox-host-exec with $src_dir/{file_name} as an argument
+    distrobox-host-exec $src_dir/$file_name \"\$@\"
+fi
+"
+
+    # Write the content to the new file in the destination directory
+    echo "$content" > $dest_dir/$file_name
+
+    # Make the new file executable
+    chmod +x $dest_dir/$file_name
+done
